@@ -12,6 +12,13 @@
       gap: 20px;
     }
 
+    #calendar,
+    #overlayCalendar {
+      display: grid;
+      grid-template-columns: 120px repeat(5, 1fr);
+      gap: 2px;
+    }
+
     .overlay {
       pointer-events: none;
     }
@@ -52,10 +59,8 @@ const interval = 30;
 let selectedSlots = new Set();
 let isDragging = false;
 
-// ✅ FIX text highlighting
 document.addEventListener("selectstart", e => e.preventDefault());
 
-// ✅ EVENT ID
 let eventId = new URLSearchParams(window.location.search).get("event");
 
 if (!eventId) {
@@ -63,7 +68,6 @@ if (!eventId) {
   window.location.search = "?event=" + eventId;
 }
 
-// ✅ BUILD BOTH CALENDARS
 function renderCalendar() {
   calendar.innerHTML = "";
   overlayCalendar.innerHTML = "";
@@ -97,14 +101,12 @@ function renderCalendar() {
   applySelection();
 }
 
-// ✅ FORMAT TIME
 function formatTime(hour, minute) {
   const ampm = hour >= 12 ? "PM" : "AM";
   const h = hour % 12 === 0 ? 12 : hour % 12;
   return `${h}:${String(minute).padStart(2,"0")} ${ampm}`;
 }
 
-// ✅ DRAG SELECT (ONLY LEFT GRID)
 calendar.addEventListener("mousedown", e => {
   if (e.target.classList.contains("slot")) {
     isDragging = true;
@@ -120,7 +122,6 @@ calendar.addEventListener("mouseover", e => {
 
 document.addEventListener("mouseup", () => isDragging = false);
 
-// ✅ TOGGLE SLOT
 function toggleSlot(el) {
   const id = el.dataset.slot;
 
@@ -133,7 +134,6 @@ function toggleSlot(el) {
   }
 }
 
-// ✅ APPLY SELECTION
 function applySelection() {
   calendar.querySelectorAll(".slot").forEach(slot => {
     if (selectedSlots.has(slot.dataset.slot)) {
@@ -142,7 +142,6 @@ function applySelection() {
   });
 }
 
-// ✅ CLEAR
 function clearSelection() {
   selectedSlots.clear();
 
@@ -155,7 +154,6 @@ function clearSelection() {
   });
 }
 
-// ✅ SAVE
 async function saveAvailability() {
   const user = prompt("Your name:");
 
@@ -174,12 +172,9 @@ async function saveAvailability() {
   alert("Saved ✅");
 }
 
-// ✅ LOAD (FIXED CLEAN)
 async function loadAvailability() {
   const res = await fetch(`${API}/event/${eventId}`);
   const data = await res.json();
-
-  console.log("Loaded:", data);
 
   const counts = {};
 
@@ -189,7 +184,6 @@ async function loadAvailability() {
     });
   });
 
-  // APPLY TO OVERLAY ONLY
   overlayCalendar.querySelectorAll(".slot").forEach(slot => {
     const c = counts[slot.dataset.slot] || 0;
 
@@ -201,13 +195,11 @@ async function loadAvailability() {
   });
 }
 
-// ✅ SHARE LINK
 function copyLink() {
   navigator.clipboard.writeText(window.location.href);
   alert("Link copied ✅");
 }
 
-// ✅ INIT
 renderCalendar();
 
 </script>
