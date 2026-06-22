@@ -1,5 +1,6 @@
 * {
   user-select: none;
+  box-sizing: border-box;
 }
 
 body {
@@ -11,41 +12,68 @@ body {
 
 button {
   margin-right: 8px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: 999px;
   border: none;
-  background: #6366f1;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: white;
   cursor: pointer;
+  box-shadow: 0 6px 14px rgba(99, 102, 241, 0.35);
 }
 
-#calendar {
+button:hover {
+  filter: brightness(1.1);
+}
+
+.container {
+  display: flex;
+  gap: 30px;
+  align-items: flex-start;
+}
+
+#calendar,
+#overlayCalendar {
   display: grid;
-  grid-template-columns: 80px repeat(5, 1fr);
+  grid-template-columns: 120px repeat(5, 1fr);
   gap: 2px;
-  margin-top: 10px;
+  background: rgba(255,255,255,0.02);
+  padding: 6px;
+  border-radius: 12px;
 }
 
 .header {
-  background: #1e3a8a;
+  background: linear-gradient(135deg, #1e3a8a, #312e81);
   text-align: center;
   padding: 6px;
   font-weight: bold;
 }
 
 .time-label {
-  text-align: right;
-  padding: 4px;
   color: #aaa;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 30px;
 }
 
 .slot {
   height: 30px;
   background: rgba(255,255,255,0.05);
+  border-radius: 4px;
   cursor: pointer;
-  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.slot:hover {
+  background: rgba(99,102,241,0.3);
 }
 
 .slot.selected {
   background: #ec4899;
+}
+
+.overlay {
+  pointer-events: auto;
+  cursor: default;
 }
