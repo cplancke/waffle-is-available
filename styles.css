@@ -3,6 +3,9 @@
       background: #0b1026;
       color: white;
       padding: 20px;
+      user-select: none;
+}
+
     }
 
     button {
