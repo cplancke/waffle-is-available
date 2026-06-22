@@ -29,7 +29,9 @@ const interval = 30;
 
 let selectedSlots = new Set();
 let isDragging = false;
-
+//fix the bad highlighting
+document.addEventListener("selectstart", e => e.preventDefault());
+  
 // ✅ Build calendar
 function renderCalendar() {
   calendar.innerHTML = "";
