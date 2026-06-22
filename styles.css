@@ -1,49 +1,51 @@
-    body {
-      font-family: Arial, sans-serif;
-      background: #0b1026;
-      color: white;
-      padding: 20px;
-      user-select: none;
+* {
+  user-select: none;
 }
 
-    }
+body {
+  font-family: Arial, sans-serif;
+  background: #0b1026;
+  color: white;
+  padding: 20px;
+}
 
-    button {
-      margin-right: 8px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: none;
-      background: #6366f1;
-      color: white;
-      cursor: pointer;
-    }
+button {
+  margin-right: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  background: #6366f1;
+  color: white;
+  cursor: pointer;
+}
 
-    #calendar {
-      display: grid;
-      grid-template-columns: 80px repeat(5, 1fr);
-      gap: 2px;
-      margin-top: 10px;
-    }
+#calendar {
+  display: grid;
+  grid-template-columns: 80px repeat(5, 1fr);
+  gap: 2px;
+  margin-top: 10px;
+}
 
-    .header {
-      background: #1e3a8a;
-      text-align: center;
-      padding: 6px;
-      font-weight: bold;
-    }
+.header {
+  background: #1e3a8a;
+  text-align: center;
+  padding: 6px;
+  font-weight: bold;
+}
 
-    .time-label {
-      text-align: right;
-      padding: 4px;
-      color: #aaa;
-    }
+.time-label {
+  text-align: right;
+  padding: 4px;
+  color: #aaa;
+}
 
-    .slot {
-      height: 30px;
-      background: rgba(255,255,255,0.05);
-      cursor: pointer;
-    }
+.slot {
+  height: 30px;
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  user-select: none;
+}
 
-    .slot.selected {
-      background: #ec4899;
-    }
+.slot.selected {
+  background: #ec4899;
+}
