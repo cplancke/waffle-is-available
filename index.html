@@ -3,7 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <title>Waffle is Available</title>
+
   <link rel="stylesheet" href="styles.css">
+
+  <style>
+    .container {
+      display: flex;
+      gap: 20px;
+    }
+
+    .overlay {
+      pointer-events: none;
+    }
+  </style>
 </head>
 
 <body>
@@ -15,12 +27,23 @@
 <button onclick="clearSelection()">Clear</button>
 <button onclick="copyLink()">Share</button>
 
-<div id="calendar"></div>
+<div class="container">
+  <div>
+    <h3>My Availability</h3>
+    <div id="calendar"></div>
+  </div>
+
+  <div>
+    <h3>Group Availability</h3>
+    <div id="overlayCalendar"></div>
+  </div>
+</div>
 
 <script>
 const API = "https://magic.cplan079.workers.dev";
 
 const calendar = document.getElementById("calendar");
+const overlayCalendar = document.getElementById("overlayCalendar");
 
 const startHour = 9;
 const endHour = 18;
@@ -29,10 +52,10 @@ const interval = 30;
 let selectedSlots = new Set();
 let isDragging = false;
 
-// ✅ FIX text selection while dragging
+// ✅ FIX text highlighting
 document.addEventListener("selectstart", e => e.preventDefault());
 
-// ✅ EVENT ID (THIS FIXES EVERYTHING)
+// ✅ EVENT ID
 let eventId = new URLSearchParams(window.location.search).get("event");
 
 if (!eventId) {
@@ -40,15 +63,19 @@ if (!eventId) {
   window.location.search = "?event=" + eventId;
 }
 
-// ✅ Build calendar
+// ✅ BUILD BOTH CALENDARS
 function renderCalendar() {
   calendar.innerHTML = "";
+  overlayCalendar.innerHTML = "";
 
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
   calendar.innerHTML += "<div class='header'>Time</div>";
+  overlayCalendar.innerHTML += "<div class='header'>Time</div>";
+
   days.forEach(d => {
     calendar.innerHTML += `<div class="header">${d}</div>`;
+    overlayCalendar.innerHTML += `<div class="header">${d}</div>`;
   });
 
   for (let h = startHour; h < endHour; h++) {
@@ -56,13 +83,13 @@ function renderCalendar() {
       const time = formatTime(h, m);
 
       calendar.innerHTML += `<div class="time-label">${time}</div>`;
+      overlayCalendar.innerHTML += `<div class="time-label">${time}</div>`;
 
       for (let d = 0; d < 5; d++) {
         const slotId = `${days[d]} ${time}`;
 
-        calendar.innerHTML += `
-          <div class="slot" data-slot="${slotId}"></div>
-        `;
+        calendar.innerHTML += `<div class="slot" data-slot="${slotId}"></div>`;
+        overlayCalendar.innerHTML += `<div class="slot overlay" data-slot="${slotId}"></div>`;
       }
     }
   }
@@ -70,14 +97,14 @@ function renderCalendar() {
   applySelection();
 }
 
-// ✅ Format time
+// ✅ FORMAT TIME
 function formatTime(hour, minute) {
   const ampm = hour >= 12 ? "PM" : "AM";
   const h = hour % 12 === 0 ? 12 : hour % 12;
   return `${h}:${String(minute).padStart(2,"0")} ${ampm}`;
 }
 
-// ✅ Drag select
+// ✅ DRAG SELECT (ONLY LEFT GRID)
 calendar.addEventListener("mousedown", e => {
   if (e.target.classList.contains("slot")) {
     isDragging = true;
@@ -93,7 +120,7 @@ calendar.addEventListener("mouseover", e => {
 
 document.addEventListener("mouseup", () => isDragging = false);
 
-// ✅ Toggle
+// ✅ TOGGLE SLOT
 function toggleSlot(el) {
   const id = el.dataset.slot;
 
@@ -106,21 +133,25 @@ function toggleSlot(el) {
   }
 }
 
-// ✅ Apply selection (after render)
+// ✅ APPLY SELECTION
 function applySelection() {
-  document.querySelectorAll(".slot").forEach(slot => {
+  calendar.querySelectorAll(".slot").forEach(slot => {
     if (selectedSlots.has(slot.dataset.slot)) {
       slot.classList.add("selected");
     }
   });
 }
 
-// ✅ Clear
+// ✅ CLEAR
 function clearSelection() {
   selectedSlots.clear();
-  document.querySelectorAll(".slot").forEach(s => {
+
+  calendar.querySelectorAll(".slot").forEach(s => {
     s.classList.remove("selected");
-    s.style.background = ""; // also clear heatmap
+  });
+
+  overlayCalendar.querySelectorAll(".slot").forEach(s => {
+    s.style.background = "";
   });
 }
 
@@ -143,30 +174,26 @@ async function saveAvailability() {
   alert("Saved ✅");
 }
 
-// ✅ LOAD + HEATMAP (FIXED)
+// ✅ LOAD (FIXED CLEAN)
 async function loadAvailability() {
   const res = await fetch(`${API}/event/${eventId}`);
   const data = await res.json();
 
   console.log("Loaded:", data);
 
-  // ✅ clear previous heatmap
-  document.querySelectorAll(".slot").forEach(slot => {
-    slot.style.background = "";
-  });
-
   const counts = {};
 
-  // count overlap
   Object.values(data).forEach(userSlots => {
     userSlots.forEach(slot => {
       counts[slot] = (counts[slot] || 0) + 1;
     });
   });
 
-  // apply heatmap
-  document.querySelectorAll(".slot").forEach(slot => {
+  // APPLY TO OVERLAY ONLY
+  overlayCalendar.querySelectorAll(".slot").forEach(slot => {
     const c = counts[slot.dataset.slot] || 0;
+
+    slot.style.background = "";
 
     if (c > 0) {
       slot.style.background = `rgba(0, 200, 0, ${c / 4})`;
@@ -180,7 +207,7 @@ function copyLink() {
   alert("Link copied ✅");
 }
 
-// ✅ Initial render
+// ✅ INIT
 renderCalendar();
 
 </script>
