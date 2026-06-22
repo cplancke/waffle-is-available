@@ -12,15 +12,15 @@
       gap: 20px;
     }
 
+    .overlay {
+      pointer-events: none;
+    }
+
     #calendar,
     #overlayCalendar {
       display: grid;
       grid-template-columns: 120px repeat(5, 1fr);
       gap: 2px;
-    }
-
-    .overlay {
-      pointer-events: none;
     }
   </style>
 </head>
@@ -151,6 +151,7 @@ function clearSelection() {
 
   overlayCalendar.querySelectorAll(".slot").forEach(s => {
     s.style.background = "";
+    s.title = "";
   });
 }
 
@@ -177,10 +178,14 @@ async function loadAvailability() {
   const data = await res.json();
 
   const counts = {};
+  const namesBySlot = {};
 
-  Object.values(data).forEach(userSlots => {
-    userSlots.forEach(slot => {
+  Object.entries(data).forEach(([user, slots]) => {
+    slots.forEach(slot => {
       counts[slot] = (counts[slot] || 0) + 1;
+
+      if (!namesBySlot[slot]) namesBySlot[slot] = [];
+      namesBySlot[slot].push(user);
     });
   });
 
@@ -188,9 +193,11 @@ async function loadAvailability() {
     const c = counts[slot.dataset.slot] || 0;
 
     slot.style.background = "";
+    slot.title = "";
 
     if (c > 0) {
       slot.style.background = `rgba(0, 200, 0, ${c / 4})`;
+      slot.title = namesBySlot[slot.dataset.slot].join(", ");
     }
   });
 }
