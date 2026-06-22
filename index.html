@@ -3,11 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <title>Waffle is Available</title>
-
+  <link rel="stylesheet" href="styles.css">
 </head>
 
-<link rel="stylesheet" href="styles.css">
-  
 <body>
 
 <h2>🧇 Waffle is Available 🧇</h2>
@@ -15,18 +13,11 @@
 <button onclick="saveAvailability()">Save</button>
 <button onclick="loadAvailability()">Load</button>
 <button onclick="clearSelection()">Clear</button>
+<button onclick="copyLink()">Share</button>
 
 <div id="calendar"></div>
 
 <script>
-
-let eventId = new URLSearchParams(window.location.search).get("event");
-
-if (!eventId) {
-  eventId = Math.random().toString(36).substring(2);
-  window.location.search = "?event=" + eventId;
-}
-
 const API = "https://magic.cplan079.workers.dev";
 
 const calendar = document.getElementById("calendar");
@@ -37,9 +28,18 @@ const interval = 30;
 
 let selectedSlots = new Set();
 let isDragging = false;
-//fix the bad highlighting
+
+// ✅ FIX text selection while dragging
 document.addEventListener("selectstart", e => e.preventDefault());
-  
+
+// ✅ EVENT ID (THIS FIXES EVERYTHING)
+let eventId = new URLSearchParams(window.location.search).get("event");
+
+if (!eventId) {
+  eventId = Math.random().toString(36).substring(2);
+  window.location.search = "?event=" + eventId;
+}
+
 // ✅ Build calendar
 function renderCalendar() {
   calendar.innerHTML = "";
@@ -61,9 +61,7 @@ function renderCalendar() {
         const slotId = `${days[d]} ${time}`;
 
         calendar.innerHTML += `
-          <div class="slot"
-               data-slot="${slotId}">
-          </div>
+          <div class="slot" data-slot="${slotId}"></div>
         `;
       }
     }
@@ -79,7 +77,7 @@ function formatTime(hour, minute) {
   return `${h}:${String(minute).padStart(2,"0")} ${ampm}`;
 }
 
-// ✅ Toggle slot
+// ✅ Drag select
 calendar.addEventListener("mousedown", e => {
   if (e.target.classList.contains("slot")) {
     isDragging = true;
@@ -95,6 +93,7 @@ calendar.addEventListener("mouseover", e => {
 
 document.addEventListener("mouseup", () => isDragging = false);
 
+// ✅ Toggle
 function toggleSlot(el) {
   const id = el.dataset.slot;
 
@@ -107,6 +106,7 @@ function toggleSlot(el) {
   }
 }
 
+// ✅ Apply selection (after render)
 function applySelection() {
   document.querySelectorAll(".slot").forEach(slot => {
     if (selectedSlots.has(slot.dataset.slot)) {
@@ -118,7 +118,10 @@ function applySelection() {
 // ✅ Clear
 function clearSelection() {
   selectedSlots.clear();
-  document.querySelectorAll(".slot").forEach(s => s.classList.remove("selected"));
+  document.querySelectorAll(".slot").forEach(s => {
+    s.classList.remove("selected");
+    s.style.background = ""; // also clear heatmap
+  });
 }
 
 // ✅ SAVE
@@ -131,7 +134,7 @@ async function saveAvailability() {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      eventId: "demo-event",
+      eventId: eventId,
       user: user,
       slots: Array.from(selectedSlots)
     })
@@ -140,28 +143,41 @@ async function saveAvailability() {
   alert("Saved ✅");
 }
 
-// ✅ LOAD + HEATMAP
+// ✅ LOAD + HEATMAP (FIXED)
 async function loadAvailability() {
-  const res = await fetch(`${API}/event/demo-event`);
+  const res = await fetch(`${API}/event/${eventId}`);
   const data = await res.json();
+
+  console.log("Loaded:", data);
+
+  // ✅ clear previous heatmap
+  document.querySelectorAll(".slot").forEach(slot => {
+    slot.style.background = "";
+  });
 
   const counts = {};
 
+  // count overlap
   Object.values(data).forEach(userSlots => {
     userSlots.forEach(slot => {
       counts[slot] = (counts[slot] || 0) + 1;
     });
   });
 
+  // apply heatmap
   document.querySelectorAll(".slot").forEach(slot => {
     const c = counts[slot.dataset.slot] || 0;
 
     if (c > 0) {
-      slot.style.background = `rgba(0, 200, 0, ${c / 5})`;
+      slot.style.background = `rgba(0, 200, 0, ${c / 4})`;
     }
   });
+}
 
-  alert("Loaded ✅");
+// ✅ SHARE LINK
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href);
+  alert("Link copied ✅");
 }
 
 // ✅ Initial render
