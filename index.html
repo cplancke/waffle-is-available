@@ -19,6 +19,14 @@
 <div id="calendar"></div>
 
 <script>
+
+let eventId = new URLSearchParams(window.location.search).get("event");
+
+if (!eventId) {
+  eventId = Math.random().toString(36).substring(2);
+  window.location.search = "?event=" + eventId;
+}
+
 const API = "https://magic.cplan079.workers.dev";
 
 const calendar = document.getElementById("calendar");
