@@ -45,12 +45,14 @@
     <div id="overlayCalendar"></div>
   </div>
 </div>
-
+<div id="tooltip"></div>
 <script>
 const API = "https://magic.cplan079.workers.dev";
 
 const calendar = document.getElementById("calendar");
 const overlayCalendar = document.getElementById("overlayCalendar");
+const tooltip = document.getElementById("tooltip");
+let loadedAvailability = {};
 
 const startHour = 9;
 const endHour = 18;
@@ -176,6 +178,7 @@ async function saveAvailability() {
 async function loadAvailability() {
   const res = await fetch(`${API}/event/${eventId}`);
   const data = await res.json();
+  loadedAvailability = data;
 
   const counts = {};
   const namesBySlot = {};
@@ -197,16 +200,71 @@ async function loadAvailability() {
 
     if (c > 0) {
       slot.style.background = `rgba(0, 200, 0, ${c / 4})`;
-      slot.title = namesBySlot[slot.dataset.slot].join(", ");
     }
   });
 }
 
+function buildTooltipHtml(slotId) {
+  const available = [];
+  const unavailable = [];
+
+  Object.entries(loadedAvailability).forEach(([user, slots]) => {
+    if (slots.includes(slotId)) {
+      available.push(user);
+    } else {
+      unavailable.push(user);
+    }
+  });
+
+  return `
+    <div><strong>${slotId}</strong></div>
+    <div class="tooltip-section">
+      <div class="tooltip-label">Available</div>
+      <div>${available.length ? available.join(", ") : "Nobody"}</div>
+    </div>
+    <div class="tooltip-section">
+      <div class="tooltip-label">Not available</div>
+      <div>${unavailable.length ? unavailable.join(", ") : "Nobody"}</div>
+    </div>
+  `;
+}
+
+function showTooltip(slotId, x, y) {
+  if (!loadedAvailability || Object.keys(loadedAvailability).length === 0) {
+    tooltip.style.display = "none";
+    return;
+  }
+
+  tooltip.innerHTML = buildTooltipHtml(slotId);
+  tooltip.style.left = `${x + 14}px`;
+  tooltip.style.top = `${y + 14}px`;
+  tooltip.style.display = "block";
+}
+
+function hideTooltip() {
+  tooltip.style.display = "none";
+}
+  
 function copyLink() {
   navigator.clipboard.writeText(window.location.href);
   alert("Link copied ✅");
 }
 
+overlayCalendar.addEventListener("mousemove", (e) => {
+  const slot = e.target.closest(".slot.overlay");
+  if (!slot) {
+    hideTooltip();
+    return;
+  }
+
+  showTooltip(slot.dataset.slot, e.clientX, e.clientY);
+});
+
+overlayCalendar.addEventListener("mouseleave", () => {
+  hideTooltip();
+});
+
+  
 renderCalendar();
 
 </script>
