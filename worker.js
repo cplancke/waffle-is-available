@@ -2,6 +2,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // ✅ GET event data
     if (request.method === "GET" && url.pathname.startsWith("/event")) {
       const eventId = url.pathname.split("/")[2];
 
@@ -11,6 +12,7 @@ export default {
       });
     }
 
+    // ✅ SAVE availability
     if (request.method === "POST" && url.pathname === "/save") {
       const body = await request.json();
       const { eventId, user, slots } = body;
