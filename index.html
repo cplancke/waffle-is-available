@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Waffle is Available</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0b1026;
+      color: white;
+      padding: 20px;
+    }
+
+    button {
+      margin-right: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: none;
+      background: #6366f1;
+      color: white;
+      cursor: pointer;
+    }
+
+    #calendar {
+      display: grid;
+      grid-template-columns: 80px repeat(5, 1fr);
+      gap: 2px;
+      margin-top: 10px;
+    }
+
+    .header {
+      background: #1e3a8a;
+      text-align: center;
+      padding: 6px;
+      font-weight: bold;
+    }
+
+    .time-label {
+      text-align: right;
+      padding: 4px;
+      color: #aaa;
+    }
+
+    .slot {
+      height: 30px;
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+    }
+
+    .slot.selected {
+      background: #ec4899;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>🧇 Waffle is Available 🧇</h2>
+
+<button onclick="saveAvailability()">Save</button>
+<button onclick="loadAvailability()">Load</button>
+<button onclick="clearSelection()">Clear</button>
+
+<div id="calendar"></div>
+
+<script>
+const API = "https://magic.cplan079.workers.dev";
+
+const calendar = document.getElementById("calendar");
+
+const startHour = 9;
+const endHour = 18;
+const interval = 30;
+
+let selectedSlots = new Set();
+let isDragging = false;
+
+// ✅ Build calendar
+function renderCalendar() {
+  calendar.innerHTML = "";
+
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+  calendar.innerHTML += "<div class='header'>Time</div>";
+  days.forEach(d => {
+    calendar.innerHTML += `<div class="header">${d}</div>`;
+  });
+
+  for (let h = startHour; h < endHour; h++) {
+    for (let m = 0; m < 60; m += interval) {
+      const time = formatTime(h, m);
+
+      calendar.innerHTML += `<div class="time-label">${time}</div>`;
+
+      for (let d = 0; d < 5; d++) {
+        const slotId = `${days[d]} ${time}`;
+
+        calendar.innerHTML += `
+          <div class="slot"
+               data-slot="${slotId}">
+          </div>
+        `;
+      }
+    }
+  }
+
+  applySelection();
+}
+
+// ✅ Format time
+function formatTime(hour, minute) {
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const h = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h}:${String(minute).padStart(2,"0")} ${ampm}`;
+}
+
+// ✅ Toggle slot
+calendar.addEventListener("mousedown", e => {
+  if (e.target.classList.contains("slot")) {
+    isDragging = true;
+    toggleSlot(e.target);
+  }
+});
+
+calendar.addEventListener("mouseover", e => {
+  if (isDragging && e.target.classList.contains("slot")) {
+    toggleSlot(e.target);
+  }
+});
+
+document.addEventListener("mouseup", () => isDragging = false);
+
+function toggleSlot(el) {
+  const id = el.dataset.slot;
+
+  if (selectedSlots.has(id)) {
+    selectedSlots.delete(id);
+    el.classList.remove("selected");
+  } else {
+    selectedSlots.add(id);
+    el.classList.add("selected");
+  }
+}
+
+function applySelection() {
+  document.querySelectorAll(".slot").forEach(slot => {
+    if (selectedSlots.has(slot.dataset.slot)) {
+      slot.classList.add("selected");
+    }
+  });
+}
+
+// ✅ Clear
+function clearSelection() {
+  selectedSlots.clear();
+  document.querySelectorAll(".slot").forEach(s => s.classList.remove("selected"));
+}
+
+// ✅ SAVE
+async function saveAvailability() {
+  const user = prompt("Your name:");
+
+  await fetch(`${API}/save`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      eventId: "demo-event",
+      user: user,
+      slots: Array.from(selectedSlots)
+    })
+  });
+
+  alert("Saved ✅");
+}
+
+// ✅ LOAD + HEATMAP
+async function loadAvailability() {
+  const res = await fetch(`${API}/event/demo-event`);
+  const data = await res.json();
+
+  const counts = {};
+
+  Object.values(data).forEach(userSlots => {
+    userSlots.forEach(slot => {
+      counts[slot] = (counts[slot] || 0) + 1;
+    });
+  });
+
+  document.querySelectorAll(".slot").forEach(slot => {
+    const c = counts[slot.dataset.slot] || 0;
+
+    if (c > 0) {
+      slot.style.background = `rgba(0, 200, 0, ${c / 5})`;
+    }
+  });
+
+  alert("Loaded ✅");
+}
+
+// ✅ Initial render
+renderCalendar();
+
+</script>
+
+</body>
+</html>
